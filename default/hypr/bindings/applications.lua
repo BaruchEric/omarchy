@@ -18,6 +18,7 @@ if o.preinstalled_bindings_enabled() then
   o.bind("SUPER + SHIFT + O", "Obsidian", { launch = "obsidian", focus = "^obsidian$" })
   o.bind("SUPER + SHIFT + W", "Omawrite", { launch = "omawrite" })
   o.bind("SUPER + SHIFT + SLASH", "Passwords", { omarchy = "1password" })
+  o.bind("CTRL + SHIFT + SPACE", "1Password Quick Access", { launch = "1password --quick-access" })
 
   o.bind("SUPER + SHIFT + A", "ChatGPT", { webapp = "https://chatgpt.com" })
   o.bind("SUPER + SHIFT + ALT + A", "Grok", { webapp = "https://grok.com" })
