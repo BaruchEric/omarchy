@@ -50,6 +50,19 @@ Item {
   readonly property int defaultBarSize: barVertical ? Style.bar.sizeVertical : Style.bar.sizeHorizontal
   readonly property int liveBarSize: shell && shell.bar && !shell.bar.barHidden ? Math.max(0, shell.bar.barSize) : defaultBarSize
   readonly property int barClearance: liveBarSize + Style.gapsOut
+  // Notification surfaces live on the overlay layer, above the ordinary
+  // fullscreen terminal used by the screensaver. Hide them while either the
+  // screensaver or secure lock covers the session, and resume their remaining
+  // lifetime only once the user can see them again. Startup remains private
+  // until the idle service reconciles windows that predate a shell reload.
+  readonly property var idleService: shell ? shell.firstPartyServiceFor("omarchy.idle") : null
+  readonly property var lockService: shell ? shell.firstPartyServiceFor("omarchy.lock") : null
+  readonly property bool screenObscured:
+    !idleService
+    || !idleService.screensaverStateKnown
+    || idleService.screensaverWindowCount > 0
+    || !lockService
+    || lockService.locked
 
   // Live Notification objects by originalId, kept OUT of the ListModels: a
   // QObject stored in a model role becomes a dangling C++ pointer when the
@@ -956,7 +969,7 @@ Item {
       id: popupWindow
       required property var modelData
       screen: modelData
-      visible: popupModel.count > 0
+      visible: popupModel.count > 0 && !service.screenObscured
 
       WlrLayershell.namespace: "omarchy-notifications"
       WlrLayershell.layer: WlrLayer.Overlay
@@ -1012,7 +1025,7 @@ Item {
 
             readonly property real lifetime: service.durationFor(cardSlot.urgency, cardSlot.expireTimeout)
             property real remainingLifetime: 1.0
-            readonly property bool ticking: cardSlot.lifetime > 0 && !card.hovered
+            readonly property bool ticking: cardSlot.lifetime > 0 && !card.hovered && !service.screenObscured
 
             // A client updating this notification in place rewrites the row
             // under the card (see refreshPopup). New text deserves a full look,
